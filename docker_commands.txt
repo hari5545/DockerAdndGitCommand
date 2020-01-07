@@ -1,0 +1,178 @@
+What is Docker?
+---------------
+
+Docker is a tool designed to make it easier to create, deploy, and run applications by using containers. 
+Containers allow a developer to package up an application with all of the parts it needs, such as libraries and other dependencies, and ship it all out as one package.
+
+what is docke image?
+--------------------
+
+When the Docker command line tool executes the instructions inside a Dockerfile, the command line tool produces a Docker Image. The Docker image contains all needed files and instructions to run the corresponding Docker container. It is possible to start multiple Docker containers from the same Docker image. 
+
+
+what is docke composer?
+-----------------------
+
+The Docker Compose feature enables you to "link" multiple Docker containers into a single "composition", which can be installed / deployed and started up all at once.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+							     docker commands :
+							     ----------------
+
+DOCKER VERSION = docker -v
+
+create docker image = docker build -t image-name .
+
+run docker image = docker run --name (name of the conatiner) -p docker port:application port image-name.
+
+exit from docker conatiner = ctrl+c 
+
+know the running docker conatiners = docker ps
+
+know the docker images in conatiner = docker ps -a
+
+stop docker default = docker-machine stop default 
+
+start docker default =docker-machine start default
+
+
+pull mysql image form docker hub = docker pull mysql:latest
+
+
+runing mysql image = docker run -d  -p 3306:3306  --name apigateway-mysql  -e MYSQL_ROOT_PASSWORD=kings   -e MYSQL_DATABASE=kingslive  -e 
+
+MYSQL_USER=kings  -e MYSQL_PASSWORD=kings   mysql
+
+
+runing api-gateway and mysql = docker run -t  --name api-gateway --link apigateway-mysql:mysql -p 8083:8083 api-gateway 
+
+
+remove one conatiner from docker =  docker rm conatiner id
+
+
+stop docker conatiner= docker stop $(docker ps -q)
+
+
+know the ip=docker-machine ip
+
+delete image from container =$ docker rmi image id
+
+list of network=docker network ls
+
+remove un-used images=  docker rmi -f $(docker images -a -q)
+
+how to run docker compose file =docker-compose up
+
+stops services in dependency order = docker-compose stop 
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+					       HOW CAN I WRITE DOCKER FILES:
+					       -----------------------------
+docker file structure
+----------------------
+
+FROM openjdk:8
+
+EXPOSE 8083
+
+VOLUME /tmp
+
+ADD target/APIGateWay-0.0.1-SNAPSHOT.jar APIGateWay-0.0.1-SNAPSHOT.jar
+
+ENTRYPOINT [ "java","-jar" ,"APIGateWay-0.0.1-SNAPSHOT.jar" ]
+
+explination:
+------------
+
+Form = If a FROM image is not found on the host, Docker will try to find it (and download) from the Docker Hub or other container repository.
+
+Expose = The EXPOSE command is used to associate a specified port to enable networking between the running process inside the container and the 
+outside world (i.e. the host).
+
+Volume = The VOLUME command is used to enable access from your container to a directory on the host machine (i.e. mounting it).
+
+Add = The ADD command gets two arguments: a source and a destination. It basically copies the files from the source on the host into the 
+container’s own filesystem at the set destination.
+
+EntryPoint = ENTRYPOINT argument sets the concrete default application that is used every time a container is created using the image.
+
+
+
+Docker compose file structure
+------------------------------
+
+version: "3"
+
+services:
+
+  ServiceRegistryAndDiscovery:
+
+    image: eureka-server
+
+    ports:
+      - 8761:8761
+
+    build:
+
+      context: ./
+
+      dockerfile: Dockerfile 
+     
+  apigateway:
+
+    image: api-gateway
+
+    build:
+
+      context: ./
+
+      dockerfile: Dockerfile
+
+    depends_on:
+
+      - ServiceRegistryAndDiscovery
+
+    ports:
+
+      - 8083:8083
+      
+  orderitemsapplication:
+
+    image: order-item
+
+    build:
+
+      context: ./
+
+      dockerfile: Dockerfile
+
+    depends_on:
+
+      - ServiceRegistryAndDiscovery
+
+    ports:
+
+      - 7878:7878
+
+explination:
+------------
+services = we need to mentioned multiple services.
+
+ServiceRegistryAndDiscovery = write your application name.
+
+image = Specify the image to start the container from. Can either be a repository/tag or a partial image ID.
+
+build = build can be specified either as a string containing a path to the build context (or) as an object with the path specified under context 
+
+and optionally Dockerfile and args
+
+context = Either a path to a directory containing a Dockerfile, or a url to a git repository.
+
+dockerfile = Alternate Dockerfile.
+
+depends_on = Express dependency between services.
+
+ports = Expose ports.
